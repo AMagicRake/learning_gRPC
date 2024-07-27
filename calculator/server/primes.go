@@ -6,13 +6,11 @@ func (s *Server) Primes(in *pb.PrimesRequest, stream pb.CalcService_PrimesServer
 	var k int32 = 2
 	primeNumber := in.Input
 
-	for {
-		if primeNumber <= 0 {
-			break
-		}
+	for primeNumber > 1 {
+
 		if primeNumber%k == 0 {
 			stream.Send(&pb.PrimesResponse{Output: k})
-			primeNumber = primeNumber / k
+			primeNumber /= k
 		} else {
 			k++
 		}
