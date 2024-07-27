@@ -13,6 +13,15 @@ message CalcResponse{
     int32 result = 1;
 }
 
+message PrimesRequest{
+    int32 input = 1;
+}
+
+message PrimesResponse{
+    int32 output = 1;
+}
+
 service CalcService{
     rpc Add (CalcRequest) returns (CalcResponse);
+    rpc Primes (PrimesRequest) returns (stream PrimesResponse);
 }

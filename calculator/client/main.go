@@ -21,5 +21,6 @@ func main() {
 
 	c := pb.NewCalcServiceClient(conn)
 
-	doAdd(c)
+	// doAdd(c)
+	doPrimes(c)
 }
