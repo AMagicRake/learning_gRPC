@@ -33,6 +33,6 @@ func doAverage(c pb.CalcServiceClient) {
 		log.Printf("Error receiving response: %v\n", err)
 	}
 
-	log.Printf("Average result: %d\n", res.Output)
+	log.Printf("Average result: %v\n", res.Output)
 
 }

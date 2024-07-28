@@ -16,7 +16,8 @@ func (s *Server) Avg(stream pb.CalcService_AvgServer) error {
 		req, err := stream.Recv()
 		if err == io.EOF {
 			//do average calc
-			stream.SendAndClose(&pb.AvgResponse{Output: float64(sum / count)})
+			result := float64(sum) / float64(count)
+			return stream.SendAndClose(&pb.AvgResponse{Output: result})
 		}
 		if err != nil {
 			log.Fatalf("Error while receiving stream: %v\n", err)
