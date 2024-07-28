@@ -25,6 +25,7 @@ type CalcServiceClient interface {
 	Add(ctx context.Context, in *CalcRequest, opts ...grpc.CallOption) (*CalcResponse, error)
 	Primes(ctx context.Context, in *PrimesRequest, opts ...grpc.CallOption) (CalcService_PrimesClient, error)
 	Avg(ctx context.Context, opts ...grpc.CallOption) (CalcService_AvgClient, error)
+	Max(ctx context.Context, opts ...grpc.CallOption) (CalcService_MaxClient, error)
 }
 
 type calcServiceClient struct {
@@ -110,6 +111,37 @@ func (x *calcServiceAvgClient) CloseAndRecv() (*AvgResponse, error) {
 	return m, nil
 }
 
+func (c *calcServiceClient) Max(ctx context.Context, opts ...grpc.CallOption) (CalcService_MaxClient, error) {
+	stream, err := c.cc.NewStream(ctx, &CalcService_ServiceDesc.Streams[2], "/calculator.CalcService/Max", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &calcServiceMaxClient{stream}
+	return x, nil
+}
+
+type CalcService_MaxClient interface {
+	Send(*MaxRequest) error
+	Recv() (*MaxResponse, error)
+	grpc.ClientStream
+}
+
+type calcServiceMaxClient struct {
+	grpc.ClientStream
+}
+
+func (x *calcServiceMaxClient) Send(m *MaxRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *calcServiceMaxClient) Recv() (*MaxResponse, error) {
+	m := new(MaxResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CalcServiceServer is the server API for CalcService service.
 // All implementations must embed UnimplementedCalcServiceServer
 // for forward compatibility
@@ -117,6 +149,7 @@ type CalcServiceServer interface {
 	Add(context.Context, *CalcRequest) (*CalcResponse, error)
 	Primes(*PrimesRequest, CalcService_PrimesServer) error
 	Avg(CalcService_AvgServer) error
+	Max(CalcService_MaxServer) error
 	mustEmbedUnimplementedCalcServiceServer()
 }
 
@@ -132,6 +165,9 @@ func (UnimplementedCalcServiceServer) Primes(*PrimesRequest, CalcService_PrimesS
 }
 func (UnimplementedCalcServiceServer) Avg(CalcService_AvgServer) error {
 	return status.Errorf(codes.Unimplemented, "method Avg not implemented")
+}
+func (UnimplementedCalcServiceServer) Max(CalcService_MaxServer) error {
+	return status.Errorf(codes.Unimplemented, "method Max not implemented")
 }
 func (UnimplementedCalcServiceServer) mustEmbedUnimplementedCalcServiceServer() {}
 
@@ -211,6 +247,32 @@ func (x *calcServiceAvgServer) Recv() (*AvgRequest, error) {
 	return m, nil
 }
 
+func _CalcService_Max_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(CalcServiceServer).Max(&calcServiceMaxServer{stream})
+}
+
+type CalcService_MaxServer interface {
+	Send(*MaxResponse) error
+	Recv() (*MaxRequest, error)
+	grpc.ServerStream
+}
+
+type calcServiceMaxServer struct {
+	grpc.ServerStream
+}
+
+func (x *calcServiceMaxServer) Send(m *MaxResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *calcServiceMaxServer) Recv() (*MaxRequest, error) {
+	m := new(MaxRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CalcService_ServiceDesc is the grpc.ServiceDesc for CalcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -232,6 +294,12 @@ var CalcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "Avg",
 			Handler:       _CalcService_Avg_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "Max",
+			Handler:       _CalcService_Max_Handler,
+			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},
