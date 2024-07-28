@@ -32,4 +32,5 @@ message AvgResponse{
 service CalcService{
     rpc Add (CalcRequest) returns (CalcResponse);
     rpc Primes (PrimesRequest) returns (stream PrimesResponse);
+    rpc Avg (stream AvgRequest) returns (AvgResponse);
 }

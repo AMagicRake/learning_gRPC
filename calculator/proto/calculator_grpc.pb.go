@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type CalcServiceClient interface {
 	Add(ctx context.Context, in *CalcRequest, opts ...grpc.CallOption) (*CalcResponse, error)
 	Primes(ctx context.Context, in *PrimesRequest, opts ...grpc.CallOption) (CalcService_PrimesClient, error)
+	Avg(ctx context.Context, opts ...grpc.CallOption) (CalcService_AvgClient, error)
 }
 
 type calcServiceClient struct {
@@ -75,12 +76,47 @@ func (x *calcServicePrimesClient) Recv() (*PrimesResponse, error) {
 	return m, nil
 }
 
+func (c *calcServiceClient) Avg(ctx context.Context, opts ...grpc.CallOption) (CalcService_AvgClient, error) {
+	stream, err := c.cc.NewStream(ctx, &CalcService_ServiceDesc.Streams[1], "/calculator.CalcService/Avg", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &calcServiceAvgClient{stream}
+	return x, nil
+}
+
+type CalcService_AvgClient interface {
+	Send(*AvgRequest) error
+	CloseAndRecv() (*AvgResponse, error)
+	grpc.ClientStream
+}
+
+type calcServiceAvgClient struct {
+	grpc.ClientStream
+}
+
+func (x *calcServiceAvgClient) Send(m *AvgRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *calcServiceAvgClient) CloseAndRecv() (*AvgResponse, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(AvgResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CalcServiceServer is the server API for CalcService service.
 // All implementations must embed UnimplementedCalcServiceServer
 // for forward compatibility
 type CalcServiceServer interface {
 	Add(context.Context, *CalcRequest) (*CalcResponse, error)
 	Primes(*PrimesRequest, CalcService_PrimesServer) error
+	Avg(CalcService_AvgServer) error
 	mustEmbedUnimplementedCalcServiceServer()
 }
 
@@ -93,6 +129,9 @@ func (UnimplementedCalcServiceServer) Add(context.Context, *CalcRequest) (*CalcR
 }
 func (UnimplementedCalcServiceServer) Primes(*PrimesRequest, CalcService_PrimesServer) error {
 	return status.Errorf(codes.Unimplemented, "method Primes not implemented")
+}
+func (UnimplementedCalcServiceServer) Avg(CalcService_AvgServer) error {
+	return status.Errorf(codes.Unimplemented, "method Avg not implemented")
 }
 func (UnimplementedCalcServiceServer) mustEmbedUnimplementedCalcServiceServer() {}
 
@@ -146,6 +185,32 @@ func (x *calcServicePrimesServer) Send(m *PrimesResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _CalcService_Avg_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(CalcServiceServer).Avg(&calcServiceAvgServer{stream})
+}
+
+type CalcService_AvgServer interface {
+	SendAndClose(*AvgResponse) error
+	Recv() (*AvgRequest, error)
+	grpc.ServerStream
+}
+
+type calcServiceAvgServer struct {
+	grpc.ServerStream
+}
+
+func (x *calcServiceAvgServer) SendAndClose(m *AvgResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *calcServiceAvgServer) Recv() (*AvgRequest, error) {
+	m := new(AvgRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // CalcService_ServiceDesc is the grpc.ServiceDesc for CalcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -163,6 +228,11 @@ var CalcService_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "Primes",
 			Handler:       _CalcService_Primes_Handler,
 			ServerStreams: true,
+		},
+		{
+			StreamName:    "Avg",
+			Handler:       _CalcService_Avg_Handler,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "calculator.proto",
