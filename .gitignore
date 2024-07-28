@@ -1,1 +1,4 @@
-ssl/
+ssl/*.crt
+ssl/*.key
+ssl/*.pem
+ssl/*.csr
