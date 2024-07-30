@@ -3,7 +3,10 @@ package main
 import (
 	"context"
 	pb "grpc-go/blog/proto"
+	"io"
 	"log"
+
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func createBlog(c pb.BlogServiceClient) string {
@@ -50,4 +53,24 @@ func updateBlog(c pb.BlogServiceClient, toUpdate *pb.Blog) {
 	}
 
 	log.Printf("Blog was updated: %v\n", res)
+}
+
+func listBlog(c pb.BlogServiceClient) {
+	log.Println("List blogs was invoked")
+
+	stream, err := c.ListBlogs(context.Background(), &emptypb.Empty{})
+	if err != nil {
+		log.Printf("Error while creating stream to list blogs: %v\n", err)
+	}
+
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Printf("Unknown error while reading stream: %v\n", err)
+		}
+		log.Printf("Blog: %v\n", msg)
+	}
 }
