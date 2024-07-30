@@ -30,4 +30,7 @@ func main() {
 
 	listBlog(c)
 
+	deleteBlog(c, id)
+	readBlog(c, id)
+
 }

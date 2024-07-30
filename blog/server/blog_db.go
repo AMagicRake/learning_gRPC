@@ -113,7 +113,39 @@ func (s *Server) UpdateBlog(ctx context.Context, inData *pb.Blog) (*empty.Empty,
 
 }
 
-// func (s *Server) DeleteBlog(ctx context.Context,inData *pb.BlogId) (*empty.Empty, error) {}
+func (s *Server) DeleteBlog(ctx context.Context, inData *pb.BlogId) (*empty.Empty, error) {
+	log.Printf("Delete blog was called for: %v\n", inData)
+
+	oid, err := primitive.ObjectIDFromHex(inData.Id)
+
+	if err != nil {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			"Cannot parse ID",
+		)
+	}
+
+	filter := bson.M{"_id": oid}
+
+	res, err := collection.DeleteOne(context.Background(), filter)
+
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			fmt.Sprintf("Unknown error while deleting: %v\n", err),
+		)
+	}
+
+	if res.DeletedCount == 0 {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"The Blog ID could not be found",
+		)
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
 func (s *Server) ListBlogs(inData *empty.Empty, stream pb.BlogService_ListBlogsServer) error {
 	log.Println("List blogs was invoked")
 
